@@ -2,41 +2,64 @@ class Calculator {
     constructor(previousArg, currentArg) {
         this.previousArg = previousArg
         this.currentArg = currentArg
+        this.clear()
     }
-    
+
     clear() {
-        this.current = '';
-        this.previous = '';
+        this.current = ' ';
+        this.previous = ' ';
         this.operation = undefined;
     }
-    
-    appendNumber(num) {
-        this.current = num;
+    delete() {
+        this.current = this.current.toString().slice(0, -1)
     }
-    
+
+    appendNumber(num) {
+        if (num === '.' && this.current.includes('.')) return
+        this.current = this.current.toString() + num.toString();
+    }
+    getDisplayNum(num) {
+        const stringNum = num.toString();
+        const integerNum = parseFloat(stringNum.split('.')[0])
+        const deciNum = (stringNum.split('.')[1])
+        let integerDisplay;
+        if (isNaN(integerNum)) {
+            integerDisplay = '';
+        } else {
+            integerDisplay = integerNum.toLocaleString('en', {
+                maximumFractionDigits: 0
+            })
+        }
+        if (deciNum != null) {
+            return `${integerDisplay}.${deciNum}`
+        } else {
+            return integerDisplay
+        }
+    }
     updateDisplay() {
-        this.currentArg.innerText = this.current;
-        if (this.operation != undefined){
-            this.previousArg.innerText = `${this.previous} ${this.operation}`
+        this.currentArg.innerText = this.getDisplayNum(this.current);
+        if (this.operation != undefined) {
+            this.previousArg.innerText = `${this.getDisplayNum(this.previous)} ${this.operation}`
         } else {
             this.previousArg.innerText = ''
         }
     }
-    
+
     chooseOperation(operation) {
         if (this.current === '') return
-        if (this.current !== '') {
+        if (this.previous !== '') {
             this.compute()
         }
         this.operation = operation
         this.previous = this.current
         this.current = ''
     }
-    
+
     compute() {
         let compute;
-        const prev = this.previousArg;
-        const curr = this.currentArg;
+        const prev = parseFloat(this.previous);
+        const curr = parseFloat(this.current);
+        if (isNaN(prev) || isNaN(curr)) return
         switch (this.operation) {
             case '+':
                 compute = prev + curr
@@ -82,4 +105,17 @@ operationBtn.forEach(btn => {
         calculator.chooseOperation(btn.innerText)
         calculator.updateDisplay()
     })
+})
+
+equal.addEventListener('click', () => {
+    calculator.compute()
+    calculator.updateDisplay()
+})
+allClear.addEventListener('click', () => {
+    calculator.clear()
+    calculator.updateDisplay()
+})
+del.addEventListener('click', () => {
+    calculator.delete()
+    calculator.updateDisplay()
 })
