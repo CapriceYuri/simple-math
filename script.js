@@ -1,121 +1,90 @@
-class Calculator {
-    constructor(previousArg, currentArg) {
-        this.previousArg = previousArg
-        this.currentArg = currentArg
-        this.clear()
-    }
-
-    clear() {
-        this.current = ' ';
-        this.previous = ' ';
-        this.operation = undefined;
-    }
-    delete() {
-        this.current = this.current.toString().slice(0, -1)
-    }
-
-    appendNumber(num) {
-        if (num === '.' && this.current.includes('.')) return
-        this.current = this.current.toString() + num.toString();
-    }
-    getDisplayNum(num) {
-        const stringNum = num.toString();
-        const integerNum = parseFloat(stringNum.split('.')[0])
-        const deciNum = (stringNum.split('.')[1])
-        let integerDisplay;
-        if (isNaN(integerNum)) {
-            integerDisplay = '';
-        } else {
-            integerDisplay = integerNum.toLocaleString('en', {
-                maximumFractionDigits: 0
-            })
-        }
-        if (deciNum != null) {
-            return `${integerDisplay}.${deciNum}`
-        } else {
-            return integerDisplay
-        }
-    }
-    updateDisplay() {
-        this.currentArg.innerText = this.getDisplayNum(this.current);
-        if (this.operation != undefined) {
-            this.previousArg.innerText = `${this.getDisplayNum(this.previous)} ${this.operation}`
-        } else {
-            this.previousArg.innerText = ''
-        }
-    }
-
-    chooseOperation(operation) {
-        if (this.current === '') return
-        if (this.previous !== '') {
-            this.compute()
-        }
-        this.operation = operation
-        this.previous = this.current
-        this.current = ''
-    }
-
-    compute() {
-        let compute;
-        const prev = parseFloat(this.previous);
-        const curr = parseFloat(this.current);
-        if (isNaN(prev) || isNaN(curr)) return
-        switch (this.operation) {
-            case '+':
-                compute = prev + curr
-                break;
-            case '-':
-                compute = prev - curr
-                break;
-            case '/':
-                compute = prev / curr
-                break;
-            case '*':
-                compute = prev * curr
-                break;
-            default:
-                return
-        }
-        this.current = compute;
-        this.previous = ''
-        this.operation = undefined
-    }
-}
-
 const numberBtn = document.querySelectorAll('.number');
 const operationBtn = document.querySelectorAll('.operation');
 const allClear = document.querySelector('.allclear');
 const del = document.querySelector('.delete');
 const equal = document.querySelector('.equal');
 
-const currentArg = document.querySelector('.current-input')
-const previousArg = document.querySelector('.previous-input')
+const firstArg = document.querySelector('.first-input')
+const output = document.querySelector('.third-input')
 
-const calculator = new Calculator(previousArg, currentArg);
+let firstOperand = '';
+let secondOperand = '';
+let answerHolder = '';
+let operation = undefined;
 
 numberBtn.forEach(btn => {
-    btn.addEventListener('click', () => {
-        calculator.appendNumber(btn.innerText)
-        calculator.updateDisplay()
+    btn.addEventListener('click', (e) => {
+        if (firstOperand !== '' && operation !== undefined) {
+            secondOperand += e.target.innerText;
+            firstArg.innerText = `${firstOperand} ${operation} ${secondOperand}`
+        } else {
+            firstOperand += e.target.innerText;
+            firstArg.innerText = `${firstOperand} `;
+        }
     })
 })
-
 operationBtn.forEach(btn => {
-    btn.addEventListener('click', () => {
-        calculator.chooseOperation(btn.innerText)
-        calculator.updateDisplay()
+    btn.addEventListener('click', (e) => {
+        if(answerHolder !== ''){
+            output.innerText = ''
+            secondOperand = ''
+            firstOperand = answerHolder;
+            firstArg.innerText = `${firstOperand}`
+            operation = e.target.innerText;
+        }
+        if (firstOperand === '') return
+        if (firstArg.innerText.includes('+') || firstArg.innerText.includes('-') || firstArg.innerText.includes('/') || firstArg.innerText.includes('*')) return
+        operation = e.target.innerText;
+        firstArg.innerText += ` ${operation} `
     })
 })
 
 equal.addEventListener('click', () => {
-    calculator.compute()
-    calculator.updateDisplay()
+    let computation;
+    let prev = +firstOperand | 0;
+    let curr = +secondOperand | 0;
+    switch (operation) {
+        case '+':
+            computation = prev + curr
+            break;
+        case '-':
+            computation = prev - curr
+            break;
+        case '/':
+            computation = prev / curr
+            break;
+        case '*':
+            computation = prev * curr
+            break;
+        default:
+            computation = firstArg.innerText;
+    }
+    answerHolder = computation;
+    output.innerText = answerHolder;
 })
-allClear.addEventListener('click', () => {
-    calculator.clear()
-    calculator.updateDisplay()
-})
-del.addEventListener('click', () => {
-    calculator.delete()
-    calculator.updateDisplay()
-})
+
+// clear() remove all values for all inputs and variables
+// removal() will remove from right to left. Will "return" when answer is displayed.
+allClear.addEventListener('click', clear)
+del.addEventListener('click', removal)
+function clear(){
+    firstOperand = ''
+    secondOperand = ''
+    answerHolder = ''
+    operation = undefined
+    firstArg.innerText = ''
+    output.innerText = ''
+}
+function removal(){
+    if(output.innerText !== '') return
+    if(secondOperand !== ''){
+        secondOperand = secondOperand.toString().slice(0,-1);
+        firstArg.innerText = firstArg.innerText.toString().slice(0,-1)
+    } else if (operation !== undefined && secondOperand === ''){
+        operation = undefined;
+        firstArg.innerText = firstArg.innerText.toString().slice(0,-1)
+    } else if (firstOperand !== '' && operation === undefined && secondOperand === '') {
+        firstOperand = firstOperand.toString().slice(0,-1);
+        firstArg.innerText = firstArg.innerText.toString().slice(0,-1)
+    }
+}
